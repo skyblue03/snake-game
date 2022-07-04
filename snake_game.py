@@ -1,17 +1,18 @@
 import pygame
 import random
+import sys
 
 pygame.init()
 
 width, height = 640, 480
 screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption('Fruit Snake')
+pygame.display.set_caption('Fruit Effects Snake')
 
 black = (0, 0, 0)
 white = (255, 255, 255)
 red = (255, 0, 0)
 green = (0, 255, 0)
-blue = (0, 0, 255)  # Added blue color for special food
+blue = (0, 0, 255)
 
 # Snake position and body
 snake_pos = [100, 50]
@@ -31,6 +32,28 @@ direction = 'RIGHT'
 change_to = direction
 snake_speed = 15
 clock = pygame.time.Clock()
+
+# Score variable
+score = 0
+
+def show_score(color, font, size):
+    score_font = pygame.font.SysFont(font, size)
+    score_surface = score_font.render('Score: ' + str(score), True, color)
+    score_rect = score_surface.get_rect()
+    score_rect.midtop = (width / 2, 10)
+    screen.blit(score_surface, score_rect)
+
+def game_over():
+    my_font = pygame.font.SysFont('times new roman', 50)
+    game_over_surface = my_font.render('Your Score is: ' + str(score), True, red)
+    game_over_rect = game_over_surface.get_rect()
+    game_over_rect.midtop = (width / 2, height / 4)
+    screen.fill(black)
+    screen.blit(game_over_surface, game_over_rect)
+    pygame.display.flip()
+    pygame.time.sleep(2)
+    pygame.quit()
+    sys.exit()
 
 # Game loop flag
 running = True
@@ -65,6 +88,7 @@ while running:
     snake_body.insert(0, list(snake_pos))
     if snake_pos == food_pos:
         food_spawn = False
+        score += 10  # Increase score by 10 for normal food
     else:
         snake_body.pop()
     
@@ -93,10 +117,10 @@ while running:
 
     # Game Over conditions
     if snake_pos[0] < 0 or snake_pos[0] >= width or snake_pos[1] < 0 or snake_pos[1] >= height:
-        running = False
+        game_over()
     for block in snake_body[1:]:
         if snake_pos == block:
-            running = False
+            game_over()
 
     # Refresh game screen
     screen.fill(black)
@@ -112,6 +136,9 @@ while running:
     if special_food_effect:
         pygame.draw.rect(screen, blue, pygame.Rect(special_food_pos[0], special_food_pos[1], 10, 10))
 
+    # Display score
+    show_score(white, 'times new roman', 20)
+
     # Update display
     pygame.display.update()
 
@@ -120,3 +147,4 @@ while running:
 
 # Quit Pygame
 pygame.quit()
+sys.exit()
