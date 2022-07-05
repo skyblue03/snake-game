@@ -13,6 +13,8 @@ white = (255, 255, 255)
 red = (255, 0, 0)
 green = (0, 255, 0)
 blue = (0, 0, 255)
+yellow = (255, 255, 0)  # For slow down food
+orange = (255, 165, 0)  # For shrink food
 
 # Snake position and body
 snake_pos = [100, 50]
@@ -23,9 +25,17 @@ food_pos = [random.randrange(1, (width // 10)) * 10, random.randrange(1, (height
 food_spawn = True
 
 # Special food variables
-special_food_pos = []
+speed_boost_food_pos = []
+slow_down_food_pos = []
+shrink_food_pos = []
+
 special_food_effect = False
 effect_duration = 0
+
+# Food spawn probabilities
+speed_boost_chance = 10  # 10% chance
+slow_down_chance = 10  # 10% chance
+shrink_chance = 5  # 5% chance
 
 # Direction and speed
 direction = 'RIGHT'
@@ -98,19 +108,39 @@ while running:
         food_spawn = True
 
     # Spawn special food occasionally
-    if not special_food_effect and random.randint(1, 20) == 1:  # 5% chance of spawning special food
-        special_food_pos = [random.randrange(1, (width // 10)) * 10, random.randrange(1, (height // 10)) * 10]
-        special_food_effect = True
+    if not special_food_effect:
+        if random.randint(1, 100) <= speed_boost_chance:  # Speed boost food
+            speed_boost_food_pos = [random.randrange(1, (width // 10)) * 10, random.randrange(1, (height // 10)) * 10]
+            special_food_effect = 'speed'
+        elif random.randint(1, 100) <= slow_down_chance:  # Slow down food
+            slow_down_food_pos = [random.randrange(1, (width // 10)) * 10, random.randrange(1, (height // 10)) * 10]
+            special_food_effect = 'slow'
+        elif random.randint(1, 100) <= shrink_chance:  # Shrink food
+            shrink_food_pos = [random.randrange(1, (width // 10)) * 10, random.randrange(1, (height // 10)) * 10]
+            special_food_effect = 'shrink'
 
     # Handle eating special food
-    if snake_pos == special_food_pos:
+    if special_food_effect == 'speed' and snake_pos == speed_boost_food_pos:
         effect_duration = 50  # Number of frames the effect lasts
+        speed_boost_food_pos = []
+        snake_speed = 30  # Increased speed
         special_food_effect = False
-        special_food_pos = []
+
+    elif special_food_effect == 'slow' and snake_pos == slow_down_food_pos:
+        effect_duration = 50
+        slow_down_food_pos = []
+        snake_speed = 10  # Decreased speed
+        special_food_effect = False
+
+    elif special_food_effect == 'shrink' and snake_pos == shrink_food_pos:
+        effect_duration = 0  # No duration, instant effect
+        shrink_food_pos = []
+        if len(snake_body) > 3:  # Ensure the snake doesn't shrink below a minimum length
+            snake_body.pop()
+        special_food_effect = False
 
     # Apply effects
     if effect_duration > 0:
-        snake_speed = 30  # Increased speed
         effect_duration -= 1
     else:
         snake_speed = 15  # Normal speed
@@ -133,8 +163,12 @@ while running:
     pygame.draw.rect(screen, red, pygame.Rect(food_pos[0], food_pos[1], 10, 10))
     
     # Draw special food
-    if special_food_effect:
-        pygame.draw.rect(screen, blue, pygame.Rect(special_food_pos[0], special_food_pos[1], 10, 10))
+    if special_food_effect == 'speed':
+        pygame.draw.rect(screen, blue, pygame.Rect(speed_boost_food_pos[0], speed_boost_food_pos[1], 10, 10))
+    elif special_food_effect == 'slow':
+        pygame.draw.rect(screen, yellow, pygame.Rect(slow_down_food_pos[0], slow_down_food_pos[1], 10, 10))
+    elif special_food_effect == 'shrink':
+        pygame.draw.rect(screen, orange, pygame.Rect(shrink_food_pos[0], shrink_food_pos[1], 10, 10))
 
     # Display score
     show_score(white, 'times new roman', 20)
