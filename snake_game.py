@@ -2,15 +2,12 @@ import pygame
 import random
 import sys
 
-# Initialize Pygame
 pygame.init()
 
-# Screen dimensions
-width, height = 640, 480
+width, height = 645, 490
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption('Fruit Effects Snake')
 
-# Colors
 black = (0, 0, 0)
 white = (255, 255, 255)
 red = (255, 0, 0)
@@ -19,11 +16,11 @@ blue = (0, 0, 255)
 yellow = (255, 255, 0)  # For slow down food
 orange = (255, 165, 0)  # For shrink food
 
-# Snake initial position and body
+# Snake position and body
 snake_pos = [100, 50]
 snake_body = [[100, 50], [90, 50], [80, 50]]
 
-# Food initial random position
+# Food random position
 food_pos = [random.randrange(1, (width // 10)) * 10, random.randrange(1, (height // 10)) * 10]
 food_spawn = True
 
@@ -78,8 +75,102 @@ def show_level(color, font, size):
     level_rect.midtop = (width / 2, 40)
     screen.blit(level_surface, level_rect)
 
+def menu():
+    menu_font = pygame.font.SysFont('times new roman', 50)
+    instructions_font = pygame.font.SysFont('times new roman', 30)
+    menu_surface = menu_font.render('Fruit Effects Snake', True, white)
+    start_surface = instructions_font.render('Press S to Start', True, white)
+    instructions_surface = instructions_font.render('Press I for Instructions', True, white)
+    high_score_surface = instructions_font.render('Press H for High Scores', True, white)
+    
+    menu_rect = menu_surface.get_rect()
+    start_rect = start_surface.get_rect()
+    instructions_rect = instructions_surface.get_rect()
+    high_score_rect = high_score_surface.get_rect()
+    
+    menu_rect.midtop = (width / 2, height / 4)
+    start_rect.midtop = (width / 2, height / 2)
+    instructions_rect.midtop = (width / 2, height / 2 + 50)
+    high_score_rect.midtop = (width / 2, height / 2 + 100)
+    
+    screen.fill(black)
+    screen.blit(menu_surface, menu_rect)
+    screen.blit(start_surface, start_rect)
+    screen.blit(instructions_surface, instructions_rect)
+    screen.blit(high_score_surface, high_score_rect)
+    pygame.display.flip()
+    
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_s:
+                    return  # Start game
+                elif event.key == pygame.K_i:
+                    show_instructions()
+                elif event.key == pygame.K_h:
+                    show_high_scores()
+
+
+def show_instructions():
+    instructions_font = pygame.font.SysFont('times new roman', 30)
+    instructions_surface = instructions_font.render('Use arrow keys to move the snake.', True, white)
+    back_surface = instructions_font.render('Press B to go back', True, white)
+    
+    instructions_rect = instructions_surface.get_rect()
+    back_rect = back_surface.get_rect()
+    
+    instructions_rect.midtop = (width / 2, height / 4)
+    back_rect.midtop = (width / 2, height / 2)
+    
+    screen.fill(black)
+    screen.blit(instructions_surface, instructions_rect)
+    screen.blit(back_surface, back_rect)
+    pygame.display.flip()
+    
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_b:
+                    waiting = False
+                    menu()
+
+def show_high_scores():
+    high_score_font = pygame.font.SysFont('times new roman', 30)
+    high_score_surface = high_score_font.render('High Score: ' + str(high_score), True, white)
+    back_surface = high_score_font.render('Press B to go back', True, white)
+    
+    high_score_rect = high_score_surface.get_rect()
+    back_rect = back_surface.get_rect()
+    
+    high_score_rect.midtop = (width / 2, height / 4)
+    back_rect.midtop = (width / 2, height / 2)
+    
+    screen.fill(black)
+    screen.blit(high_score_surface, high_score_rect)
+    screen.blit(back_surface, back_rect)
+    pygame.display.flip()
+    
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_b:
+                    waiting = False
+                    menu()
+
+
 def game_over():
-    global high_score, running, snake_pos, snake_body, food_pos, food_spawn, direction, change_to, score, level, snake_speed, paused
+    global high_score, snake_pos, snake_body, food_pos, food_spawn, direction, change_to, score, level, snake_speed, paused, running
     pygame.mixer.Sound.play(game_over_sound)
     
     if score > high_score:
@@ -88,7 +179,7 @@ def game_over():
     my_font = pygame.font.SysFont('times new roman', 50)
     game_over_surface = my_font.render('Your Score is: ' + str(score), True, red)
     high_score_surface = my_font.render('High Score: ' + str(high_score), True, red)
-    restart_surface = my_font.render('Press R to Restart or Q to Quit', True, red)
+    restart_surface = my_font.render('Press R to Restart, Q to Quit, or M for Menu', True, red)
     
     game_over_rect = game_over_surface.get_rect()
     high_score_rect = high_score_surface.get_rect()
@@ -104,7 +195,8 @@ def game_over():
     screen.blit(restart_surface, restart_rect)
     pygame.display.flip()
     
-    while True:
+    waiting = True
+    while waiting:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -122,12 +214,19 @@ def game_over():
                     level = 1
                     snake_speed = 15
                     paused = False
-                    return
+                    waiting = False
                 elif event.key == pygame.K_q:  # Quit game
                     pygame.quit()
                     sys.exit()
+                elif event.key == pygame.K_m:  # Return to menu
+                    waiting = False
+                    menu()
+                    running = False
+
+menu()
 
 # Game loop flag
+# Main game loop
 running = True
 
 while running:
@@ -143,7 +242,7 @@ while running:
                 change_to = 'LEFT'
             elif event.key == pygame.K_RIGHT and direction != 'LEFT':
                 change_to = 'RIGHT'
-            elif event.key == pygame.K_p:  # Pause/Resume game
+            elif event.key == pygame.K_ESCAPE:  # Pause/Resume game
                 paused = not paused
     
     direction = change_to
